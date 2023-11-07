@@ -1,22 +1,31 @@
 FROM registry.access.redhat.com/ubi8/python-38
 
-# Add application sources with correct permissions for OpenShift
-# USER 0
-# ADD app-src .
-# RUN chown -R 1001:0 ./
-# USER 1001
-
-# Install the dependencies
-COPY . .
+# Install system dependencies as root
 USER root
-RUN yum install -y git-lfs
-RUN  git lfs install
-RUN pip install -U "pip>=19.3.1" && \
-    pip install bitsandbytes && \
-    pip install huggingface_hub && \
-    pip install -r requirements.txt
+RUN yum install -y git-lfs && \
+    git lfs install && \
+    yum clean all
 
-RUN huggingface-cli login --token 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
+# Upgrade pip and pre-install heavy libraries that don't change often
+COPY requirements.txt .
+RUN pip install -U pip
+RUN pip install bitsandbytes huggingface_hub
 
-# Run the application
-CMD python app.py
+# Install the rest of the Python dependencies from requirements.txt
+RUN pip install -r requirements.txt
+
+# Copy the application source code
+COPY . .
+
+# Copy the entrypoint script and make sure it's executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Switch back to non-root user
+USER 1001
+
+# Use the entrypoint script to login to Hugging Face and then run the application
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command runs the Python application
+CMD ["python", "app.py"]
