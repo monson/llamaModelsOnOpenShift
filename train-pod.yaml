@@ -4,16 +4,39 @@ metadata:
   name: gpu-pod1
 spec:
   restartPolicy: Never
+  imagePullSecrets:
+    - name: marhatha-llama-pull-secret
   containers:
     - name: cuda-container
       image: quay.io/marhatha/togopool:v17
-  imagePullSecrets:
-    - name: marhatha-llama-pull-secret
-      nodeSelector:
-        run: ai
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: HF_TOKEN
+          value: "<huggingface-token>"  # Replace with your actual token
+      volumeMounts:
+        - name: cache-volume
+          mountPath: "/opt/app-root/src/.cache"
       resources:
         requests:
           memory: "40Gi"
         limits:
-          nvidia.com/gpu: 1 # requesting 1 GPU
+          nvidia.com/gpu: 1
           memory: "40Gi"
+  nodeSelector:
+    run: ai
+  volumes:
+    - name: cache-volume
+      persistentVolumeClaim:
+        claimName: llm-train-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llm-train-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: gp2
