@@ -1,7 +1,7 @@
 import torch
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, BitsAndBytesConfig
 from trl import SFTTrainer
 
 
@@ -9,8 +9,9 @@ def train():
     train_dataset = load_dataset("tatsu-lab/alpaca", split="train")
     tokenizer = AutoTokenizer.from_pretrained("daryl149/llama-2-7b-chat-hf", trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
+    quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
     model = AutoModelForCausalLM.from_pretrained(
-        "daryl149/llama-2-7b-chat-hf", load_in_4bit=True, torch_dtype=torch.float16, device_map="auto", load_in_8bit_fp32_cpu_offload=True
+        "daryl149/llama-2-7b-chat-hf", load_in_4bit=True, torch_dtype=torch.float16, device_map="auto", quantization_config=quantization_config
     )
     model.resize_token_embeddings(len(tokenizer))
     model = prepare_model_for_int8_training(model)
