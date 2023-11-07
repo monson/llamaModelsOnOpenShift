@@ -9,6 +9,7 @@ spec:
   containers:
     - name: cuda-container
       image: quay.io/marhatha/togopool:v17
+      imagePullPolicy: IfNotPresent
       env:
         - name: HF_TOKEN
           value: "<huggingface-token>"  # Replace with your actual token
