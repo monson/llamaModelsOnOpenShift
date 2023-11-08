@@ -33,7 +33,7 @@ def train():
         "daryl149/llama-2-7b-chat-hf",
         load_in_4bit=True,
         torch_dtype=torch.float16,
-        device_map={available_gpus[0]: None} if available_gpus[0].startswith('cuda') else 'cpu',
+        device_map={"transformer.word_embeddings": "cuda:0", "transformer.word_embeddings_layernorm": "cuda:0","lm_head": "cuda:0","transformer.h": "cuda:0","transformer.ln_f": "cuda:0","model.embed_tokens": "cuda:0","model.layers":"cuda:0","model.norm":"cuda:0"},
         quantization_config=quantization_config
     )
     model.resize_token_embeddings(len(tokenizer))
