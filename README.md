@@ -1,34 +1,3 @@
-# OpenShift Clients
+Fine-tuning Llama models is further empowered by the robust tools offered by OpenShift, with a particular highlight on Red Hat OpenShift Data Science (RHODS). RHODS plays a pivotal role in enhancing the efficiency of the fine-tuning process, providing a comprehensive and user-friendly environment for managing the entire lifecycle of machine learning models. Leveraging the scalability and orchestration capabilities of OpenShift, RHODS seamlessly integrates into the fine-tuning workflow, allowing for swift deployment, monitoring, and optimization of Llama models. This symbiotic relationship between OpenShift and RHODS not only simplifies the technical intricacies but also ensures a more accessible and streamlined experience for data scientists and developers engaged in refining Llama models.
 
-The OpenShift client `oc` simplifies working with Kubernetes and OpenShift
-clusters, offering a number of advantages over `kubectl` such as easy login,
-kube config file management, and access to developer tools. The `kubectl`
-binary is included alongside for when strict Kubernetes compliance is necessary.
-
-To learn more about OpenShift, visit [docs.openshift.com](https://docs.openshift.com)
-and select the version of OpenShift you are using.
-
-## Installing the tools
-
-After extracting this archive, move the `oc` and `kubectl` binaries
-to a location on your PATH such as `/usr/local/bin`. Then run:
-
-    oc login [API_URL]
-
-to start a session against an OpenShift cluster. After login, run `oc` and
-`oc help` to learn more about how to get started with OpenShift.
-
-## Build and Run using podman
-```
-podman build -t finetune:v0.2 .
-
-mkdir -p cache
-chown -R 1001:1001 cache
-podman run -e HF_TOKEN='<huggingface-token>' -v ${PWD}/cache/:/opt/app-root/src/.cache finetune:v0.2
-```
-
-## License
-
-OpenShift is licensed under the Apache Public License 2.0. The source code for this
-program is [located on github](https://github.com/openshift/oc).
-# llamaModelsOnOpenShift
+The integration of OpenShift tools, particularly RHODS, brings a strategic advantage to the fine-tuning of Llama models. The collaborative ecosystem provided by OpenShift facilitates a cohesive approach to model optimization, offering a secure and scalable platform for handling diverse datasets. RHODS, with its sophisticated features for model versioning, experiment tracking, and collaborative development, enhances the reproducibility and collaboration aspects of fine-tuning. This dynamic synergy between OpenShift and RHODS not only addresses the technical nuances of model refinement but also empowers organizations to efficiently scale their machine learning initiatives, ensuring that fine-tuning Llama models becomes a seamless and collaborative endeavor within the open-source, containerized environment.
