@@ -26,16 +26,30 @@ def train():
     tokenizer = AutoTokenizer.from_pretrained("daryl149/llama-2-7b-chat-hf", trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
     logger.info("Tokenizer prepared successfully.")
-    
+
     # Prepare model for quantization and load pretrained weights
-    quantization_config = BitsAndBytesConfig(llm_int8_enable_fp32_cpu_offload=True)
+    quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16
+    )
+
     model = AutoModelForCausalLM.from_pretrained(
         "daryl149/llama-2-7b-chat-hf",
-        load_in_4bit=True,
-        torch_dtype=torch.float16,
-        device_map={"transformer.word_embeddings": "cuda:0", "transformer.word_embeddings_layernorm": "cuda:0","lm_head": "cuda:0","transformer.h": "cuda:0","transformer.ln_f": "cuda:0","model.embed_tokens": "cuda:0","model.layers":"cuda:0","model.norm":"cuda:0"},
-        quantization_config=quantization_config
+        device_map = {
+            "transformer.word_embeddings": "cuda:0", 
+            "transformer.word_embeddings_layernorm": "cuda:0",
+            "lm_head": "cuda:0",
+            "transformer.h": "cuda:0",
+            "transformer.ln_f": "cuda:0",
+            "model.embed_tokens": "cuda:0",
+            "model.layers":"cuda:0",
+            "model.norm":"cuda:0"
+        },
+        quantization_config=quantization_config,
     )
+
     model.resize_token_embeddings(len(tokenizer))
     logger.info("Model loaded and token embeddings resized successfully.")
     
@@ -54,13 +68,14 @@ def train():
         per_device_train_batch_size=2,
         gradient_accumulation_steps=16,
         optim="adamw_torch",
-        logging_steps=100,
+        logging_steps=10,
         learning_rate=2e-4,
         fp16=use_fp16,
         warmup_ratio=0.1,
         lr_scheduler_type="linear",
         num_train_epochs=1,
-        save_strategy="epoch",
+        save_strategy="steps",
+        save_total_limit=3,
         push_to_hub=True,
     )
     logger.info(f"Training arguments: {training_args}")
@@ -79,9 +94,16 @@ def train():
     logger.info("Trainer initialized successfully.")
     
     # Start training
-    trainer.train()
     logger.info("Training started.")
+    trainer.train()
+    logger.info("Training completed.")
     
+    # The model and training progress will be automatically saved during training at the specified intervals.
+    # Save the final model and tokenizer locally after training
+    trainer.save_model("llama-finetuned-7b2_final_checkpoint")
+    tokenizer.save_pretrained("llama-finetuned-7b2_final_checkpoint")
+    logger.info("Final model and tokenizer saved locally.")
+
     # Push model to the hub (optional)
     trainer.push_to_hub()
     logger.info("Model pushed to Hugging Face Hub.")
